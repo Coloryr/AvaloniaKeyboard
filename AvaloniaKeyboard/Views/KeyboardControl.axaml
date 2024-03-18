@@ -1,0 +1,414 @@
+<UserControl
+    x:Class="AvaloniaKeyboard.Views.KeyboardControl"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:view="clr-namespace:AvaloniaKeyboard.Views;assembly=AvaloniaKeyboard"
+    Design.Width="1000"
+    mc:Ignorable="d">
+    <UserControl.Styles>
+        <Style Selector="Border.k1">
+            <Setter Property="Margin" Value="1" />
+            <Setter Property="Background" Value="#CCCCCC" />
+            <Setter Property="CornerRadius" Value="3" />
+            <Setter Property="Height" Value="{Binding KeySize, RelativeSource={RelativeSource FindAncestor, AncestorType=view:KeyboardControl}}" />
+
+            <Style Selector="^:pressed">
+                <Setter Property="Background" Value="#EEEEEE" />
+            </Style>
+            <Style Selector="^:pointerover">
+                <Setter Property="Background" Value="#EEEEEE" />
+            </Style>
+        </Style>
+
+        <Style Selector="Border.k2">
+            <Setter Property="Background" Value="#AAAAAA" />
+        </Style>
+
+        <Style Selector="TextBlock.k1">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </UserControl.Styles>
+    <StackPanel>
+        <StackPanel Orientation="Horizontal">
+            <Button
+                Name="LanSwitch"
+                Width="30"
+                Height="30"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                HorizontalContentAlignment="Center"
+                VerticalContentAlignment="Center" />
+            <TextBlock
+                Name="Input"
+                Margin="10,0,0,0"
+                VerticalAlignment="Center" />
+        </StackPanel>
+        <Grid ColumnDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,2*">
+            <Border
+                Name="Oem3"
+                Grid.Column="0"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="~ `" />
+            </Border>
+            <Border
+                Name="NumPad1"
+                Grid.Column="1"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="1 !" />
+            </Border>
+            <Border
+                Name="NumPad2"
+                Grid.Column="2"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="2 @" />
+            </Border>
+            <Border
+                Name="NumPad3"
+                Grid.Column="3"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="3 #" />
+            </Border>
+            <Border
+                Name="NumPad4"
+                Grid.Column="4"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="4 $" />
+            </Border>
+            <Border
+                Name="NumPad5"
+                Grid.Column="5"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="5 %" />
+            </Border>
+            <Border
+                Name="NumPad6"
+                Grid.Column="6"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="6 ^" />
+            </Border>
+            <Border
+                Name="NumPad7"
+                Grid.Column="7"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="7 &amp;" />
+            </Border>
+            <Border
+                Name="NumPad8"
+                Grid.Column="8"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="8 *" />
+            </Border>
+            <Border
+                Name="NumPad9"
+                Grid.Column="9"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="9 (" />
+            </Border>
+            <Border
+                Name="NumPad0"
+                Grid.Column="10"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="0 )" />
+            </Border>
+            <Border
+                Name="OemMinus"
+                Grid.Column="11"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="- _" />
+            </Border>
+            <Border
+                Name="OemPlus"
+                Grid.Column="12"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="= +" />
+            </Border>
+            <Border
+                Name="Back"
+                Grid.Column="13"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="Back" />
+            </Border>
+        </Grid>
+        <Grid ColumnDefinitions="1.5*,*,*,*,*,*,*,*,*,*,*,*,*,1.5*">
+            <Border
+                Name="Tab"
+                Grid.Column="0"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="Tab" />
+            </Border>
+            <Border
+                Name="Q"
+                Grid.Column="1"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="Q" />
+            </Border>
+            <Border
+                Name="W"
+                Grid.Column="2"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="W" />
+            </Border>
+            <Border
+                Name="E"
+                Grid.Column="3"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="E" />
+            </Border>
+            <Border
+                Name="R"
+                Grid.Column="4"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="R" />
+            </Border>
+            <Border
+                Name="T"
+                Grid.Column="5"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="T" />
+            </Border>
+            <Border
+                Name="Y"
+                Grid.Column="6"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="Y" />
+            </Border>
+            <Border
+                Name="U"
+                Grid.Column="7"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="U" />
+            </Border>
+            <Border
+                Name="I"
+                Grid.Column="8"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="I" />
+            </Border>
+            <Border
+                Name="O"
+                Grid.Column="9"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="O" />
+            </Border>
+            <Border
+                Name="P"
+                Grid.Column="10"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="P" />
+            </Border>
+            <Border
+                Name="Oem4"
+                Grid.Column="11"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="[ {" />
+            </Border>
+            <Border
+                Name="Oem6"
+                Grid.Column="12"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="] }" />
+            </Border>
+            <Border
+                Name="Oem5"
+                Grid.Column="13"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="\ |" />
+            </Border>
+        </Grid>
+        <Grid ColumnDefinitions="1.8*,*,*,*,*,*,*,*,*,*,*,*,2.0*">
+            <Border
+                Name="CapsLock"
+                Grid.Column="0"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="CapsLock" />
+            </Border>
+            <Border
+                Name="A"
+                Grid.Column="1"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="A" />
+            </Border>
+            <Border
+                Name="S"
+                Grid.Column="2"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="S" />
+            </Border>
+            <Border
+                Name="D"
+                Grid.Column="3"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="D" />
+            </Border>
+            <Border
+                Name="F"
+                Grid.Column="4"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="F" />
+            </Border>
+            <Border
+                Name="G"
+                Grid.Column="5"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="G" />
+            </Border>
+            <Border
+                Name="H"
+                Grid.Column="6"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="H" />
+            </Border>
+            <Border
+                Name="J"
+                Grid.Column="7"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="J" />
+            </Border>
+            <Border
+                Name="K"
+                Grid.Column="8"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="K" />
+            </Border>
+            <Border
+                Name="L"
+                Grid.Column="9"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="L" />
+            </Border>
+            <Border
+                Name="Oem1"
+                Grid.Column="10"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="; :" />
+            </Border>
+            <Border
+                Name="Oem7"
+                Grid.Column="11"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="' &quot;" />
+            </Border>
+            <Border
+                Name="Enter"
+                Grid.Column="12"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="Enter" />
+            </Border>
+        </Grid>
+        <Grid ColumnDefinitions="2.3*,*,*,*,*,*,*,*,*,*,*,2.5*">
+            <Border
+                Name="LeftShift"
+                Grid.Column="0"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="Shift" />
+            </Border>
+            <Border
+                Name="Z"
+                Grid.Column="1"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="Z" />
+            </Border>
+            <Border
+                Name="X"
+                Grid.Column="2"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="X" />
+            </Border>
+            <Border
+                Name="C"
+                Grid.Column="3"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="C" />
+            </Border>
+            <Border
+                Name="V"
+                Grid.Column="4"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="V" />
+            </Border>
+            <Border
+                Name="B"
+                Grid.Column="5"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="B" />
+            </Border>
+            <Border
+                Name="N"
+                Grid.Column="6"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="N" />
+            </Border>
+            <Border
+                Name="M"
+                Grid.Column="7"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="M" />
+            </Border>
+            <Border
+                Name="OemComma"
+                Grid.Column="8"
+                Classes="k1">
+                <TextBlock Classes="k1" Text=", &lt;" />
+            </Border>
+            <Border
+                Name="OemPeriod"
+                Grid.Column="9"
+                Classes="k1">
+                <TextBlock Classes="k1" Text=". >" />
+            </Border>
+            <Border
+                Name="Oem2"
+                Grid.Column="10"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="/ ?" />
+            </Border>
+            <Border
+                Name="RightShift"
+                Grid.Column="11"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="Shift" />
+            </Border>
+        </Grid>
+        <Grid ColumnDefinitions="1.6*,1.6*,5*,1.5*,1.5*,*">
+            <Border
+                Name="LeftCtrl"
+                Grid.Column="0"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="Ctrl" />
+            </Border>
+            <Border
+                Name="LeftAlt"
+                Grid.Column="1"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="Alt" />
+            </Border>
+            <Border
+                Name="Space"
+                Grid.Column="2"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="Space" />
+            </Border>
+            <Border
+                Name="RightAlt"
+                Grid.Column="3"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="Alt" />
+            </Border>
+            <Border
+                Name="RightCtrl"
+                Grid.Column="4"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="Ctrl" />
+            </Border>
+            <Border
+                Name="Escape"
+                Grid.Column="5"
+                Classes="k1">
+                <TextBlock Classes="k1" Text="↓" />
+            </Border>
+        </Grid>
+    </StackPanel>
+</UserControl>

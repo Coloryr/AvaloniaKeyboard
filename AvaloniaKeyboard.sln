@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.34707.107
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AvaloniaKeyboard", "AvaloniaKeyboard\AvaloniaKeyboard.csproj", "{550119EE-896E-4659-9F9C-0F26B6335B54}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AvaloniaKeyboard.Desktop", "AvaloniaKeyboard.Desktop\AvaloniaKeyboard.Desktop.csproj", "{BDA6AF90-49E5-41C8-A80A-344E657C3EDF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "解决方案项", "解决方案项", "{49A7F718-0742-4964-A93E-1A603DDCD837}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{550119EE-896E-4659-9F9C-0F26B6335B54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{550119EE-896E-4659-9F9C-0F26B6335B54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{550119EE-896E-4659-9F9C-0F26B6335B54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{550119EE-896E-4659-9F9C-0F26B6335B54}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDA6AF90-49E5-41C8-A80A-344E657C3EDF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDA6AF90-49E5-41C8-A80A-344E657C3EDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDA6AF90-49E5-41C8-A80A-344E657C3EDF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDA6AF90-49E5-41C8-A80A-344E657C3EDF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6A2AD18D-B38B-4194-BB48-328CF733F328}
+	EndGlobalSection
+EndGlobal
