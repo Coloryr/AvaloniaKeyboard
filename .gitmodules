@@ -1,0 +1,3 @@
+[submodule "RimeSharp"]
+	path = RimeSharp
+	url = https://github.com/Coloryr/RimeSharp.git
