@@ -62,7 +62,7 @@ public partial class KeyboardControl : TemplatedControl
         set { SetValue(TextBoxProperty, value); }
     }
 
-    private static readonly string[] LanList = ["ÖĞ", "Ó¢"];
+    private static readonly string[] LanList = ["ä¸­", "en"];
 
     private bool  _isLeftShift, _isRightShift;
     private bool _isLeftCtrl, _isRightCtrl, _isLeftAlt, _isRightAlt;
@@ -76,6 +76,9 @@ public partial class KeyboardControl : TemplatedControl
     private int _select = 0;
     private int _page = 0;
     private int _maxPage = 0;
+
+    public event EventHandler<RoutedEventArgs> Inputed;
+    //public event Action? InputedEvent;
 
 #pragma warning disable CS8618
     internal StackPanel CHSelect;
@@ -582,48 +585,56 @@ public partial class KeyboardControl : TemplatedControl
             {
                 return;
             }
-            Dispatcher.UIThread.Invoke(() =>
+            try
             {
-                var box = TextBox;
-                if (box == null || _keyDownSave == Key.None)
+
+                Dispatcher.UIThread?.Invoke(() =>
                 {
-                    _count = 0;
-                    return;
-                }
-                if (_count > LoopCount)
-                {
-                    if (_keyDownSave == Key.Tab)
+                    var box = TextBox;
+                    if (box == null || _keyDownSave == Key.None)
                     {
-                        PressTab();
+                        _count = 0;
+                        return;
                     }
-                    else if (_keyDownSave == Key.Back)
+                    if (_count > LoopCount)
                     {
-                        PressBack();
-                    }
-                    else if (_keyDownSave == Key.OemComma)
-                    {
-                        PressOemComma();
-                    }
-                    else if (_keyDownSave == Key.OemPeriod)
-                    {
-                        PressOemPeriod();
+                        if (_keyDownSave == Key.Tab)
+                        {
+                            PressTab();
+                        }
+                        else if (_keyDownSave == Key.Back)
+                        {
+                            PressBack();
+                        }
+                        else if (_keyDownSave == Key.OemComma)
+                        {
+                            PressOemComma();
+                        }
+                        else if (_keyDownSave == Key.OemPeriod)
+                        {
+                            PressOemPeriod();
+                        }
+                        else
+                        {
+                            PressKey(_keyDownSave);
+                        }
                     }
                     else
                     {
-                        PressKey(_keyDownSave);
+                        _count++;
                     }
-                }
-                else
-                {
-                    _count++;
-                }
-            });
+                });
+            }
+            catch
+            {
+
+            }
         }
     }
 
     private static void InsertText(TextBox textBox, string text)
     {
-        // »ñÈ¡µ±Ç°¹â±êÎ»ÖÃ
+        // è·å–å½“å‰å…‰æ ‡ä½ç½®
         int insertionIndex = textBox.SelectionStart;
 
         if (textBox.Text == null)
@@ -632,25 +643,25 @@ public partial class KeyboardControl : TemplatedControl
         }
         else
         {
-            // »ñÈ¡µ±Ç°Ñ¡ÖĞµÄÎÄ±¾³¤¶È
+            // è·å–å½“å‰é€‰ä¸­çš„æ–‡æœ¬é•¿åº¦
             int selectionLength = textBox.SelectionEnd - textBox.SelectionStart;
 
-            // ÒÆ³ıÑ¡ÖĞµÄÎÄ±¾£¨Èç¹ûÓĞ£©
+            // ç§»é™¤é€‰ä¸­çš„æ–‡æœ¬ï¼ˆå¦‚æœæœ‰ï¼‰
             if (selectionLength > 0)
             {
                 textBox.Text = textBox.Text.Remove(insertionIndex, selectionLength);
             }
 
-            // ÔÚµ±Ç°¹â±êÎ»ÖÃ²åÈëÎÄ±¾
+            // åœ¨å½“å‰å…‰æ ‡ä½ç½®æ’å…¥æ–‡æœ¬
             textBox.Text = textBox.Text.Insert(insertionIndex, text);
         }
 
-        // ¸üĞÂ¹â±êÎ»ÖÃ
+        // æ›´æ–°å…‰æ ‡ä½ç½®
         textBox.SelectionEnd = textBox.SelectionStart = insertionIndex + text.Length;
     }
 
     /// <summary>
-    /// É¾³ı¹â±êÇ°µÄ×Ö·û
+    /// åˆ é™¤å…‰æ ‡å‰çš„å­—ç¬¦
     /// </summary>
     /// <param name="textBox"></param>
     private static void DeleteTextBeforeCursor(TextBox textBox)
@@ -664,7 +675,7 @@ public partial class KeyboardControl : TemplatedControl
     }
 
     /// <summary>
-    /// É¾³ı¹â±êºóµÄ×Ö·û
+    /// åˆ é™¤å…‰æ ‡åçš„å­—ç¬¦
     /// </summary>
     /// <param name="textBox"></param>
     //private static void DeleteTextAfterCursor(TextBox textBox)
@@ -673,12 +684,12 @@ public partial class KeyboardControl : TemplatedControl
     //    if (cursorPosition < textBox.Text.Length)
     //    {
     //        textBox.Text = textBox.Text.Remove(cursorPosition, 1);
-    //        // ¹â±êÎ»ÖÃ²»ĞèÒª¸Ä±ä
+    //        // å…‰æ ‡ä½ç½®ä¸éœ€è¦æ”¹å˜
     //    }
     //}
 
     /// <summary>
-    /// É¾³ıÑ¡ÖĞµÄÎÄ±¾
+    /// åˆ é™¤é€‰ä¸­çš„æ–‡æœ¬
     /// </summary>
     /// <param name="textBox"></param>
     private static void DeleteSelectedText(TextBox textBox)
@@ -804,8 +815,7 @@ public partial class KeyboardControl : TemplatedControl
         switch (key)
         {
             case Key.Escape:
-                TextBox = null;
-                IsVisible = false;
+                Inputed?.Invoke(this,new RoutedEventArgs());
                 return;
             case Key.CapsLock:
                 IsCaps = !IsCaps;
@@ -971,4 +981,5 @@ public partial class KeyboardControl : TemplatedControl
             _ => ' ',
         };
     }
+
 }
