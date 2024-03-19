@@ -18,7 +18,7 @@ public partial class KeyboardControl : TemplatedControl
     public static readonly StyledProperty<int> KeySizeProperty =
             AvaloniaProperty.Register<KeyboardControl, int>(nameof(KeySize), 50);
     public static readonly StyledProperty<int> LoopCountProperty =
-            AvaloniaProperty.Register<KeyboardControl, int>(nameof(LoopCount), 20);
+            AvaloniaProperty.Register<KeyboardControl, int>(nameof(LoopCount), 10);
 
     public static readonly StyledProperty<bool> IsENInputProperty =
            AvaloniaProperty.Register<KeyboardControl, bool>(nameof(IsENInput), true);
@@ -542,7 +542,6 @@ public partial class KeyboardControl : TemplatedControl
         }
     }
 
-
     private void RimeDisplay()
     {
         if (Rime.RimeGetCommit(_session, out var commit))
@@ -556,7 +555,6 @@ public partial class KeyboardControl : TemplatedControl
         }
         if (Rime.RimeGetContext(_session, out var context))
         {
-            RimeUtils.PrintContext(context);
             if (context.composition.length > 0 || context.menu.num_candidates > 0)
             {
                 Input.Text = PrintComposition(context.composition, out _input);
@@ -737,7 +735,7 @@ public partial class KeyboardControl : TemplatedControl
         {
             if (TextBox is { } box)
             {
-                InsertText(box, "  ");
+                DeleteText(box);
             }
         }
         else

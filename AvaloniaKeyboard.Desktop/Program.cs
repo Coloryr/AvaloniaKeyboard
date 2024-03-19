@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Avalonia;
 
 namespace AvaloniaKeyboard.Desktop;
@@ -13,8 +14,12 @@ class Program
     {
         RimeUtils.Init();
 
-        BuildAvaloniaApp()
-           .StartWithClassicDesktopLifetime(args);
+        if (args.Contains("--drm"))
+        {
+            BuildAvaloniaApp().StartLinuxDrm(args, "/dev/dri/card0", 1D);
+        }
+
+        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
 
     // Avalonia configuration, don't remove; also used by visual designer.
