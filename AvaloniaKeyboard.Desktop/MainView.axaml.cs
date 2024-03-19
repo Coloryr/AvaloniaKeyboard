@@ -8,6 +8,6 @@ public partial class MainView : UserControl
     {
         InitializeComponent();
 
-        Input1.SetTextBox(Text1);
+        Input1.TextBox = Text1;
     }
 }

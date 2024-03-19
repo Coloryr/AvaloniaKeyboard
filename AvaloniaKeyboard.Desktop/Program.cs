@@ -11,6 +11,8 @@ class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        RimeUtils.Init();
+
         BuildAvaloniaApp()
            .StartWithClassicDesktopLifetime(args);
     }

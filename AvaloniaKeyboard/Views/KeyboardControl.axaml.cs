@@ -1,72 +1,268 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using System.Collections.Concurrent;
+using Avalonia.Threading;
+using RimeSharp;
+using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Text;
 using System.Threading;
 
 namespace AvaloniaKeyboard.Views;
 
-public partial class KeyboardControl : UserControl
+public partial class KeyboardControl : TemplatedControl
 {
     public static readonly StyledProperty<int> KeySizeProperty =
             AvaloniaProperty.Register<KeyboardControl, int>(nameof(KeySize), 50);
+    public static readonly StyledProperty<int> LoopCountProperty =
+            AvaloniaProperty.Register<KeyboardControl, int>(nameof(LoopCount), 20);
 
-    public static readonly StyledProperty<int> KeySizeTwoProperty =
-           AvaloniaProperty.Register<KeyboardControl, int>(nameof(KeySizeTwo), 75);
-    public static readonly StyledProperty<int> KeySizeThreeProperty =
-           AvaloniaProperty.Register<KeyboardControl, int>(nameof(KeySizeThree), 100);
-    public static readonly StyledProperty<int> KeySizeFourProperty =
-           AvaloniaProperty.Register<KeyboardControl, int>(nameof(KeySizeFour), 125);
-    public static readonly StyledProperty<int> KeySizeSpaceProperty =
-           AvaloniaProperty.Register<KeyboardControl, int>(nameof(KeySizeSpace), 350);
+    public static readonly StyledProperty<bool> IsENInputProperty =
+           AvaloniaProperty.Register<KeyboardControl, bool>(nameof(IsENInput), true);
+    public static readonly StyledProperty<bool> IsCapsProperty =
+           AvaloniaProperty.Register<KeyboardControl, bool>(nameof(IsCaps), false);
+    public static readonly StyledProperty<bool> IsShiftProperty =
+           AvaloniaProperty.Register<KeyboardControl, bool>(nameof(IsShift), false);
+
+    public static readonly StyledProperty<TextBox?> TextBoxProperty =
+           AvaloniaProperty.Register<KeyboardControl, TextBox?>(nameof(TextBox));
 
     public int KeySize
     {
         get { return GetValue(KeySizeProperty); }
-        set
-        {
-            SetValue(KeySizeProperty, value);
-            SetValue(KeySizeTwoProperty, (int)(value * 1.5));
-            SetValue(KeySizeThreeProperty, (value * 2));
-            SetValue(KeySizeFourProperty, (int)(value * 2.5));
-            SetValue(KeySizeSpaceProperty, (value * 7));
-        }
+        set { SetValue(KeySizeProperty, value); }
     }
-    public int KeySizeTwo
+    public int LoopCount
     {
-        get { return GetValue(KeySizeTwoProperty); }
+        get { return GetValue(LoopCountProperty); }
+        set { SetValue(LoopCountProperty, value); }
     }
-    public int KeySizeThree
+    public bool IsENInput
     {
-        get { return GetValue(KeySizeThreeProperty); }
+        get { return GetValue(IsENInputProperty); }
+        set { SetValue(IsENInputProperty, value); }
     }
-    public int KeySizeFour
+    public bool IsCaps
     {
-        get { return GetValue(KeySizeFourProperty); }
+        get { return GetValue(IsCapsProperty); }
+        set { SetValue(IsCapsProperty, value); }
     }
-    public int KeySizeSpace
+    public bool IsShift
     {
-        get { return GetValue(KeySizeSpaceProperty); }
+        get { return GetValue(IsShiftProperty); }
+        set { SetValue(IsShiftProperty, value); }
+    }
+
+    public TextBox? TextBox
+    {
+        get { return GetValue(TextBoxProperty); }
+        set { SetValue(TextBoxProperty, value); }
     }
 
     private static readonly string[] LanList = ["中", "英"];
 
-    private bool _isENInput = true;
-    private bool _isCaps, _isLeftShift, _isRightShift;
+    private bool  _isLeftShift, _isRightShift;
     private bool _isLeftCtrl, _isRightCtrl, _isLeftAlt, _isRightAlt;
     private bool _isRun;
-    private TextBox? _textBox;
+
     private Key _keyDownSave;
     private int _count;
-    private ITransform _matrix = new MatrixTransform(Matrix.CreateScale(0.95, 0.95));
+    private readonly ITransform _matrix = new MatrixTransform(Matrix.CreateScale(0.95, 0.95));
+    private IntPtr _session;
+    private string _input = "";
+    private int _select = 0;
+    private int _page = 0;
+    private int _maxPage = 0;
 
-    public KeyboardControl()
+#pragma warning disable CS8618
+    internal StackPanel CHSelect;
+    internal Button LanSwitch;
+    internal TextBlock Input;
+    internal TextBlock InputPage;
+    internal TextBlock InputSelect;
+    internal Border Oem3;
+    internal Border NumPad1;
+    internal Border NumPad2;
+    internal Border NumPad3;
+    internal Border NumPad4;
+    internal Border NumPad5;
+    internal Border NumPad6;
+    internal Border NumPad7;
+    internal Border NumPad8;
+    internal Border NumPad9;
+    internal Border NumPad0;
+    internal Border OemMinus;
+    internal Border OemPlus;
+    internal Border Back;
+    internal Border Tab;
+    internal Border Q;
+    internal Border W;
+    internal Border E;
+    internal Border R;
+    internal Border T;
+    internal Border Y;
+    internal Border U;
+    internal Border I;
+    internal Border O;
+    internal Border P;
+    internal Border Oem4;
+    internal Border Oem6;
+    internal Border Oem5;
+    internal Border CapsLock;
+    internal Border A;
+    internal Border S;
+    internal Border D;
+    internal Border F;
+    internal Border G;
+    internal Border H;
+    internal Border J;
+    internal Border K;
+    internal Border L;
+    internal Border Oem1;
+    internal Border Oem7;
+    internal Border Enter;
+    internal Border LeftShift;
+    internal Border Z;
+    internal Border X;
+    internal Border C;
+    internal Border V;
+    internal Border B;
+    internal Border N;
+    internal Border M;
+    internal Border OemComma;
+    internal Border OemPeriod;
+    internal Border Oem2;
+    internal Border RightShift;
+    internal Border LeftCtrl;
+    internal Border LeftAlt;
+    internal Border Space;
+    internal Border RightAlt;
+    internal Border RightCtrl;
+    internal Border Escape;
+#pragma warning restore CS8618
+#pragma warning disable CS8601
+    protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
-        InitializeComponent();
+        CHSelect = e.NameScope.Find<StackPanel>("CHSelect");
+        LanSwitch = e.NameScope.Find<Button>("LanSwitch");
+        Input = e.NameScope.Find<TextBlock>("Input");
+        InputPage = e.NameScope.Find<TextBlock>("InputPage");
+        InputSelect = e.NameScope.Find<TextBlock>("InputSelect");
+        Oem3 = e.NameScope.Find<Border>("Oem3");
+        NumPad1 = e.NameScope.Find<Border>("NumPad1");
+        NumPad2 = e.NameScope.Find<Border>("NumPad2");
+        NumPad3 = e.NameScope.Find<Border>("NumPad3");
+        NumPad4 = e.NameScope.Find<Border>("NumPad4");
+        NumPad5 = e.NameScope.Find<Border>("NumPad5");
+        NumPad6 = e.NameScope.Find<Border>("NumPad6");
+        NumPad7 = e.NameScope.Find<Border>("NumPad7");
+        NumPad8 = e.NameScope.Find<Border>("NumPad8");
+        NumPad9 = e.NameScope.Find<Border>("NumPad9");
+        NumPad0 = e.NameScope.Find<Border>("NumPad0");
+        OemMinus = e.NameScope.Find<Border>("OemMinus");
+        OemPlus = e.NameScope.Find<Border>("OemPlus");
+        Back = e.NameScope.Find<Border>("Back");
+        Tab = e.NameScope.Find<Border>("Tab");
+        Q = e.NameScope.Find<Border>("Q");
+        W = e.NameScope.Find<Border>("W");
+        E = e.NameScope.Find<Border>("E");
+        R = e.NameScope.Find<Border>("R");
+        T = e.NameScope.Find<Border>("T");
+        Y = e.NameScope.Find<Border>("Y");
+        U = e.NameScope.Find<Border>("U");
+        I = e.NameScope.Find<Border>("I");
+        O = e.NameScope.Find<Border>("O");
+        P = e.NameScope.Find<Border>("P");
+        Oem4 = e.NameScope.Find<Border>("Oem4");
+        Oem6 = e.NameScope.Find<Border>("Oem6");
+        Oem5 = e.NameScope.Find<Border>("Oem5");
+        CapsLock = e.NameScope.Find<Border>("CapsLock");
+        A = e.NameScope.Find<Border>("A");
+        S = e.NameScope.Find<Border>("S");
+        D = e.NameScope.Find<Border>("D");
+        F = e.NameScope.Find<Border>("F");
+        G = e.NameScope.Find<Border>("G");
+        H = e.NameScope.Find<Border>("H");
+        J = e.NameScope.Find<Border>("J");
+        K = e.NameScope.Find<Border>("K");
+        L = e.NameScope.Find<Border>("L");
+        Oem1 = e.NameScope.Find<Border>("Oem1");
+        Oem7 = e.NameScope.Find<Border>("Oem7");
+        Enter = e.NameScope.Find<Border>("Enter");
+        LeftShift = e.NameScope.Find<Border>("LeftShift");
+        Z = e.NameScope.Find<Border>("Z");
+        X = e.NameScope.Find<Border>("X");
+        C = e.NameScope.Find<Border>("C");
+        V = e.NameScope.Find<Border>("V");
+        B = e.NameScope.Find<Border>("B");
+        N = e.NameScope.Find<Border>("N");
+        M = e.NameScope.Find<Border>("M");
+        OemComma = e.NameScope.Find<Border>("OemComma");
+        OemPeriod = e.NameScope.Find<Border>("OemPeriod");
+        Oem2 = e.NameScope.Find<Border>("Oem2");
+        RightShift = e.NameScope.Find<Border>("RightShift");
+        LeftCtrl = e.NameScope.Find<Border>("LeftCtrl");
+        LeftAlt = e.NameScope.Find<Border>("LeftAlt");
+        Space = e.NameScope.Find<Border>("Space");
+        RightAlt = e.NameScope.Find<Border>("RightAlt");
+        RightCtrl = e.NameScope.Find<Border>("RightCtrl");
+        Escape = e.NameScope.Find<Border>("Escape");
+
+        AddEvent();
+        InitDisplay();
+    }
+#pragma warning restore CS8601
+
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+
+        if (change.Property == IsCapsProperty)
+        {
+            if (IsCaps)
+            {
+                CapsLock.Classes.Add("k2");
+            }
+            else
+            {
+                CapsLock.Classes.Remove("k2");
+            }
+        }
+        else if (change.Property == IsENInputProperty)
+        {
+            LanSwitch.Content = LanList[IsENInput ? 1 : 0];
+            _count = 0;
+            _keyDownSave = Key.None;
+            RimeClear();
+        }
+    }
+
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        Dispatcher.UIThread.ShutdownStarted += UIThread_ShutdownStarted;
+        _isRun = true;
+
+        new Thread(Tick).Start();
+    }
+
+    private void UIThread_ShutdownStarted(object? sender, EventArgs e)
+    {
+        _isRun = false;
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromVisualTree(e);
+        Dispatcher.UIThread.ShutdownStarted -= UIThread_ShutdownStarted;
+        _isRun = false;
+    }
+
+    public void AddEvent()
+    {
         LanSwitch.Click += LanSwitch_Click;
         Oem3.PointerPressed += (a, b) => KeyInput(a, Key.Oem3);
         Oem3.PointerReleased += (a, b) => OnKeyUp(a, Key.Oem3);
@@ -186,74 +382,413 @@ public partial class KeyboardControl : UserControl
         RightCtrl.PointerReleased += (a, b) => OnKeyUp(a, Key.RightCtrl);
         Escape.PointerPressed += (a, b) => KeyInput(a, Key.Escape);
         Escape.PointerReleased += (a, b) => OnKeyUp(a, Key.Escape);
-
-        KeyDown += KeyboardControl_KeyDown;
     }
 
-    private void KeyboardControl_KeyDown(object? sender, KeyEventArgs e)
+    private void InitDisplay()
     {
-        
-    }
+        LanSwitch.Content = LanList[IsENInput ? 1 : 0];
 
-    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
-    {
-        base.OnAttachedToVisualTree(e);
-
-        _isRun = true;
-
-        new Thread(() =>
+        if (RimeUtils.IsEnable)
         {
-            while (_isRun)
+            _session = Rime.RimeCreateSession();
+            CHSelect.IsVisible = true;
+        }
+        else
+        {
+            CHSelect.IsVisible = false;
+        }
+    }
+
+    private static string PrintComposition(RimeComposition composition, out string input)
+    {
+        string preedit = composition.preedit;
+        if (preedit == null)
+        {
+            input = "";
+            return "";
+        }
+        int len = composition.length;
+        int start = composition.sel_start;
+        int end = composition.sel_end;
+        int cursor = composition.cursor_pos;
+        var temp = Encoding.UTF8.GetBytes(preedit);
+        var list = new List<byte>();
+        var list1 = new List<byte>();
+        for (int i = 0; i <= len; ++i)
+        {
+            if (start < end)
             {
-                Thread.Sleep(100);
-                if (_textBox == null || _keyDownSave == Key.None)
+                if (i == start)
                 {
-                    continue;
+                    list.Add((byte)'[');
                 }
-                _count++;
-                if (_count > 30)
+                else if (i == end)
+                {
+                    list.Add((byte)']');
+                }
+            }
+            if (i == cursor)
+            {
+                list.Add((byte)'|');
+            }
+            if (i < len)
+            {
+                if (i >= start && temp[i] != (byte)' ')
+                {
+                    list1.Add(temp[i]);
+                }
+                list.Add(temp[i]);
+            }
+        }
+
+        input = Encoding.UTF8.GetString(list1.ToArray());
+        return Encoding.UTF8.GetString(list.ToArray());
+    }
+
+    private (string, string) PrintMenu(RimeMenu menu)
+    {
+        if (menu.num_candidates == 0)
+            return ("", "");
+        var page = $"{menu.page_no + 1} / {menu.page_size}  ";
+        _select = menu.highlighted_candidate_index;
+        _page = menu.page_no;
+        _maxPage = menu.page_size;
+
+        var builder = new StringBuilder();
+        for (int i = 0; i < menu.num_candidates; ++i)
+        {
+            bool highlighted = i == menu.highlighted_candidate_index;
+            builder.Append($"{i + 1}. {(highlighted ? '[' : ' ')}{menu.candidates[i].text}" +
+                $"{(highlighted ? ']' : ' ')}{(menu.candidates[i].comment ?? "")}");
+        }
+
+        return (page, builder.ToString());
+    }
+
+    private void RimeClear()
+    {
+        _input = "";
+        if (Rime.RimeSetInput(_session, ""))
+        {
+            RimeDisplay();
+        }
+    }
+
+    private void RimeInput(string key)
+    {
+        var res = Rime.RimeSimulateKeySequence(_session, key);
+        if (res)
+        {
+            RimeDisplay();
+        }
+    }
+
+    private void RimeDelete()
+    {
+        if (_input.Length > 0)
+        {
+            _input = _input[..^1];
+            if (Rime.RimeSetInput(_session, _input))
+            {
+                RimeDisplay();
+            }
+        }
+        else
+        {
+            var box = TextBox;
+            if (box != null)
+            {
+                DeleteText(box);
+            }
+        }
+    }
+
+    private void RimeTab()
+    {
+        _select++;
+        if (_select >= 9)
+        {
+            _select = 0;
+        }
+        if (Rime.RimeHighlightCandidateOnCurrentPage(_session, (ulong)_select))
+        {
+            RimeDisplay();
+        }
+    }
+
+    private void RimeLast()
+    {
+        if (_page == 0)
+        {
+            return;
+        }
+
+        if (Rime.RimeChangePage(_session, true))
+        {
+            RimeDisplay();
+        }
+    }
+
+    private void RimeNext()
+    {
+        if (_page >= _maxPage - 1)
+        {
+            return;
+        }
+
+        if (Rime.RimeChangePage(_session, false))
+        {
+            RimeDisplay();
+        }
+    }
+
+
+    private void RimeDisplay()
+    {
+        if (Rime.RimeGetCommit(_session, out var commit))
+        {
+            var box = TextBox;
+            if (box != null)
+            {
+                InsertText(box, commit.text);
+                _input = "";
+            }
+        }
+        if (Rime.RimeGetContext(_session, out var context))
+        {
+            RimeUtils.PrintContext(context);
+            if (context.composition.length > 0 || context.menu.num_candidates > 0)
+            {
+                Input.Text = PrintComposition(context.composition, out _input);
+            }
+            else
+            {
+                Input.Text = "";
+            }
+
+            (InputPage.Text, InputSelect.Text) = PrintMenu(context.menu);
+        }
+        else
+        {
+            Input.Text = "";
+            InputSelect.Text = "none";
+        }
+    }
+
+    private void Tick()
+    {
+        while (_isRun)
+        {
+            Thread.Sleep(100);
+            if (_isRun == false)
+            {
+                return;
+            }
+            Dispatcher.UIThread.Invoke(() =>
+            {
+                var box = TextBox;
+                if (box == null || _keyDownSave == Key.None)
+                {
+                    _count = 0;
+                    return;
+                }
+                if (_count > LoopCount)
                 {
                     if (_keyDownSave == Key.Tab)
                     {
-                        _textBox.Text += "  ";
+                        PressTab();
                     }
                     else if (_keyDownSave == Key.Back)
                     {
-                        var temp = _textBox.Text;
-                        if (!string.IsNullOrEmpty(temp))
-                        {
-                            _textBox.Text = temp[..^1];
-                        }
+                        PressBack();
+                    }
+                    else if (_keyDownSave == Key.OemComma)
+                    {
+                        PressOemComma();
+                    }
+                    else if (_keyDownSave == Key.OemPeriod)
+                    {
+                        PressOemPeriod();
                     }
                     else
                     {
-                        _textBox.Text += KeyToChar(_keyDownSave);
+                        PressKey(_keyDownSave);
                     }
                 }
                 else
                 {
                     _count++;
                 }
-            }
-        }).Start();
+            });
+        }
     }
 
-    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    private static void InsertText(TextBox textBox, string text)
     {
-        base.OnDetachedFromVisualTree(e);
+        // 获取当前光标位置
+        int insertionIndex = textBox.SelectionStart;
 
-        _isRun = false;
+        if (textBox.Text == null)
+        {
+            textBox.Text = text;
+        }
+        else
+        {
+            // 获取当前选中的文本长度
+            int selectionLength = textBox.SelectionEnd - textBox.SelectionStart;
+
+            // 移除选中的文本（如果有）
+            if (selectionLength > 0)
+            {
+                textBox.Text = textBox.Text.Remove(insertionIndex, selectionLength);
+            }
+
+            // 在当前光标位置插入文本
+            textBox.Text = textBox.Text.Insert(insertionIndex, text);
+        }
+
+        // 更新光标位置
+        textBox.SelectionEnd = textBox.SelectionStart = insertionIndex + text.Length;
+    }
+
+    /// <summary>
+    /// 删除光标前的字符
+    /// </summary>
+    /// <param name="textBox"></param>
+    private static void DeleteTextBeforeCursor(TextBox textBox)
+    {
+        int cursorPosition = textBox.SelectionStart;
+        if (cursorPosition > 0 && textBox.Text != null)
+        {
+            textBox.Text = textBox.Text.Remove(cursorPosition - 1, 1);
+            textBox.SelectionEnd = textBox.SelectionStart = cursorPosition - 1;
+        }
+    }
+
+    /// <summary>
+    /// 删除光标后的字符
+    /// </summary>
+    /// <param name="textBox"></param>
+    //private static void DeleteTextAfterCursor(TextBox textBox)
+    //{
+    //    int cursorPosition = textBox.SelectionStart;
+    //    if (cursorPosition < textBox.Text.Length)
+    //    {
+    //        textBox.Text = textBox.Text.Remove(cursorPosition, 1);
+    //        // 光标位置不需要改变
+    //    }
+    //}
+
+    /// <summary>
+    /// 删除选中的文本
+    /// </summary>
+    /// <param name="textBox"></param>
+    private static void DeleteSelectedText(TextBox textBox)
+    {
+        if (textBox.Text != null)
+        {
+            int selectionStart = textBox.SelectionStart;
+            int selectionLength = textBox.SelectionEnd - textBox.SelectionStart;
+
+            if (selectionLength > 0)
+            {
+                textBox.Text = textBox.Text.Remove(selectionStart, selectionLength);
+                textBox.SelectionEnd = textBox.SelectionStart = selectionStart;
+            }
+        }
+    }
+
+    private static void DeleteText(TextBox textBox)
+    {
+        if (textBox.SelectionStart > 0 && textBox.SelectionEnd > 0
+            && textBox.SelectionStart != textBox.SelectionEnd)
+        {
+            DeleteSelectedText(textBox);
+        }
+        else
+        {
+            DeleteTextBeforeCursor(textBox);
+        }    
     }
 
     private void LanSwitch_Click(object? sender, RoutedEventArgs e)
     {
-        _isENInput = !_isENInput;
-        LanSwitch.Content = LanList[_isENInput ? 1 : 0];
+        IsENInput = !IsENInput;
     }
 
-    public void SetTextBox(TextBox text)
+    private void PressTab()
     {
-        _textBox = text;
+        if (IsENInput)
+        {
+            if (TextBox is { } box)
+            {
+                InsertText(box, "  ");
+            }
+        }
+        else
+        {
+            RimeTab();
+        }
+    }
+
+    private void PressBack()
+    {
+        if (IsENInput)
+        {
+            if (TextBox is { } box)
+            {
+                InsertText(box, "  ");
+            }
+        }
+        else
+        {
+            RimeDelete();
+        }
+    }
+
+    private void PressOemComma()
+    {
+        if (IsENInput)
+        {
+            if (TextBox is { } box)
+            {
+                InsertText(box, KeyToChar(Key.OemComma).ToString());
+            }
+        }
+        else
+        {
+            RimeLast();
+        }
+    }
+
+    private void PressOemPeriod()
+    {
+        if (IsENInput)
+        {
+            if (TextBox is { } box)
+            {
+                InsertText(box, KeyToChar(Key.OemPeriod).ToString());
+            }
+        }
+        else
+        {
+            RimeNext();
+        }
+    }
+
+    private void PressKey(Key key)
+    {
+        if (IsENInput)
+        {
+            if (TextBox is { } box)
+            {
+                InsertText(box, KeyToChar(key).ToString());
+            }
+        }
+        else
+        {
+            RimeInput(KeyToChar(key).ToString());
+        }
     }
 
     private void KeyInput(object? obj, Key key)
@@ -263,7 +798,7 @@ public partial class KeyboardControl : UserControl
             border.RenderTransform = _matrix;
         }
 
-        if (_textBox == null)
+        if (TextBox == null)
         {
             return;
         }
@@ -271,19 +806,11 @@ public partial class KeyboardControl : UserControl
         switch (key)
         {
             case Key.Escape:
-                _textBox = null;
+                TextBox = null;
                 IsVisible = false;
                 return;
             case Key.CapsLock:
-                _isCaps = !_isCaps;
-                if (_isCaps)
-                {
-                    CapsLock.Classes.Add("k2");
-                }
-                else
-                {
-                    CapsLock.Classes.Remove("k2");
-                }
+                IsCaps = !IsCaps;
                 return;
             case Key.LeftCtrl:
                 _isLeftCtrl = true;
@@ -299,28 +826,36 @@ public partial class KeyboardControl : UserControl
                 return;
             case Key.LeftShift:
                 _isLeftShift = true;
+                IsShift = _isLeftShift || _isRightShift;
                 return;
             case Key.RightShift:
                 _isRightShift = true;
+                IsShift = _isLeftShift || _isRightShift;
                 return;
             case Key.Back:
-                var temp = _textBox.Text;
-                if (!string.IsNullOrEmpty(temp))
-                {
-                    _textBox.Text = temp[..^1];
-                }
                 _count = 0;
                 _keyDownSave = Key.Back;
+                PressBack();
                 return;
             case Key.Tab:
-                _textBox.Text += "  ";
                 _count = 0;
                 _keyDownSave = Key.Tab;
+                PressTab();
+                break;
+            case Key.OemComma:
+                _count = 0;
+                _keyDownSave = key;
+                PressOemComma();
+                break;
+            case Key.OemPeriod:
+                _count = 0;
+                _keyDownSave = key;
+                PressOemPeriod();
                 break;
             default:
                 _count = 0;
                 _keyDownSave = key;
-                _textBox.Text += KeyToChar(key);
+                PressKey(key);
                 return;
         }
     }
@@ -334,9 +869,6 @@ public partial class KeyboardControl : UserControl
 
         switch (key)
         {
-            //case Key.CapsLock:
-            //    _isCaps = false;
-            //    return;
             case Key.LeftCtrl:
                 _isLeftCtrl = false;
                 return;
@@ -351,9 +883,11 @@ public partial class KeyboardControl : UserControl
                 return;
             case Key.LeftShift:
                 _isLeftShift = false;
+                IsShift = _isLeftShift || _isRightShift;
                 return;
             case Key.RightShift:
                 _isLeftShift = false;
+                IsShift = _isLeftShift || _isRightShift;
                 return;
             default:
                 _count = 0;
@@ -362,14 +896,15 @@ public partial class KeyboardControl : UserControl
         }
     }
 
-    private char GetKey(char a, char b)
+    private char GeCapsKey(char a, char b)
     {
-        var b1 = _isLeftShift || _isRightShift;
-        if (b1 && _isCaps)
+        var b2 = IsCaps;
+        var b1 = IsShift;
+        if (b1 && b2)
         {
             return a;
         }
-        else if (b1 && !_isCaps || !b1 && _isCaps)
+        else if (b1 && !b2 || !b1 && b2)
         {
             return b;
         }
@@ -379,7 +914,7 @@ public partial class KeyboardControl : UserControl
 
     private char GetShiftKey(char a, char b)
     {
-        return (_isLeftShift || _isRightShift) ? a : b;
+        return IsShift ? a : b;
     }
 
     private char KeyToChar(Key key)
@@ -399,37 +934,37 @@ public partial class KeyboardControl : UserControl
             Key.NumPad0 => GetShiftKey(')', '0'),
             Key.OemMinus => GetShiftKey('_', '-'),
             Key.OemPlus => GetShiftKey('+', '='),
-            Key.Q => GetKey('q', 'Q'),
-            Key.W => GetKey('w', 'W'),
-            Key.E => GetKey('e', 'E'),
-            Key.R => GetKey('r', 'R'),
-            Key.T => GetKey('t', 'T'),
-            Key.Y => GetKey('y', 'Y'),
-            Key.U => GetKey('u', 'U'),
-            Key.I => GetKey('i', 'I'),
-            Key.O => GetKey('o', 'O'),
-            Key.P => GetKey('p', 'P'),
+            Key.Q => GeCapsKey('q', 'Q'),
+            Key.W => GeCapsKey('w', 'W'),
+            Key.E => GeCapsKey('e', 'E'),
+            Key.R => GeCapsKey('r', 'R'),
+            Key.T => GeCapsKey('t', 'T'),
+            Key.Y => GeCapsKey('y', 'Y'),
+            Key.U => GeCapsKey('u', 'U'),
+            Key.I => GeCapsKey('i', 'I'),
+            Key.O => GeCapsKey('o', 'O'),
+            Key.P => GeCapsKey('p', 'P'),
             Key.Oem4 => GetShiftKey('{', '['),
             Key.Oem6 => GetShiftKey('}', ']'),
-            Key.A => GetKey('a', 'A'),
-            Key.S => GetKey('s', 'S'),
-            Key.D => GetKey('d', 'D'),
-            Key.F => GetKey('f', 'F'),
-            Key.G => GetKey('g', 'G'),
-            Key.H => GetKey('h', 'H'),
-            Key.J => GetKey('j', 'J'),
-            Key.K => GetKey('k', 'K'),
-            Key.L => GetKey('l', 'L'),
+            Key.A => GeCapsKey('a', 'A'),
+            Key.S => GeCapsKey('s', 'S'),
+            Key.D => GeCapsKey('d', 'D'),
+            Key.F => GeCapsKey('f', 'F'),
+            Key.G => GeCapsKey('g', 'G'),
+            Key.H => GeCapsKey('h', 'H'),
+            Key.J => GeCapsKey('j', 'J'),
+            Key.K => GeCapsKey('k', 'K'),
+            Key.L => GeCapsKey('l', 'L'),
             Key.Oem5 => GetShiftKey('|', '\\'),
             Key.Oem1 => GetShiftKey(':', ';'),
             Key.Oem7 => GetShiftKey('\'', '"'),
-            Key.Z => GetKey('z', 'Z'),
-            Key.X => GetKey('x', 'X'),
-            Key.C => GetKey('c', 'C'),
-            Key.V => GetKey('v', 'V'),
-            Key.B => GetKey('b', 'B'),
-            Key.N => GetKey('n', 'N'),
-            Key.M => GetKey('m', 'M'),
+            Key.Z => GeCapsKey('z', 'Z'),
+            Key.X => GeCapsKey('x', 'X'),
+            Key.C => GeCapsKey('c', 'C'),
+            Key.V => GeCapsKey('v', 'V'),
+            Key.B => GeCapsKey('b', 'B'),
+            Key.N => GeCapsKey('n', 'N'),
+            Key.M => GeCapsKey('m', 'M'),
             Key.OemComma => GetShiftKey('<', ','),
             Key.OemPeriod => GetShiftKey('>', '.'),
             Key.Oem2 => GetShiftKey('?', '/'),
