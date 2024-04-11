@@ -8,20 +8,16 @@
 
     <Style Selector="Border.k1">
         <Setter Property="Margin" Value="1" />
-        <Setter Property="Background" Value="#CCCCCC" />
+        <Setter Property="Background" Value="{DynamicResource ButtonBackground}" />
         <Setter Property="CornerRadius" Value="3" />
         <Setter Property="Height" Value="{Binding KeySize, RelativeSource={RelativeSource FindAncestor, AncestorType=view:KeyboardControl}}" />
 
         <Style Selector="^:pressed">
-            <Setter Property="Background" Value="#EEEEEE" />
+            <Setter Property="Background" Value="{DynamicResource ButtonBackgroundPressed}" />
         </Style>
         <Style Selector="^:pointerover">
-            <Setter Property="Background" Value="#EEEEEE" />
+            <Setter Property="Background" Value="{DynamicResource ButtonBackgroundPointerOver}" />
         </Style>
-    </Style>
-
-    <Style Selector="Border.k2">
-        <Setter Property="Background" Value="#AAAAAA" />
     </Style>
 
     <Style Selector="TextBlock.k1">
