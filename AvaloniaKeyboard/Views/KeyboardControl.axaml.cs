@@ -4,6 +4,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Rendering;
 using Avalonia.Threading;
 using RimeSharp;
 using System;
@@ -249,7 +250,11 @@ public partial class KeyboardControl : TemplatedControl
         Dispatcher.UIThread.ShutdownStarted += UIThread_ShutdownStarted;
         _isRun = true;
 
-        new Thread(Tick).Start();
+        DispatcherTimer.Run(() =>
+        {
+            Tick();
+            return _isRun;
+        }, TimeSpan.FromMilliseconds(100));
     }
 
     private void UIThread_ShutdownStarted(object? sender, EventArgs e)
@@ -393,7 +398,7 @@ public partial class KeyboardControl : TemplatedControl
 
         if (RimeUtils.IsEnable)
         {
-            _session = Rime.RimeCreateSession();
+            _session = Rime.CreateSession();
             CHSelect.IsVisible = true;
         }
         else
@@ -471,7 +476,7 @@ public partial class KeyboardControl : TemplatedControl
     private void RimeClear()
     {
         _input = "";
-        if (Rime.RimeSetInput(_session, ""))
+        if (Rime.SetInput(_session, ""))
         {
             RimeDisplay();
         }
@@ -479,7 +484,7 @@ public partial class KeyboardControl : TemplatedControl
 
     private void RimeInput(string key)
     {
-        var res = Rime.RimeSimulateKeySequence(_session, key);
+        var res = Rime.SimulateKeySequence(_session, key);
         if (res)
         {
             RimeDisplay();
@@ -488,22 +493,27 @@ public partial class KeyboardControl : TemplatedControl
 
     private void RimeDelete()
     {
-        if (_input.Length > 0)
+        //if (_input.Length > 0)
+        //{
+        //    _input = _input[..^1];
+        //    if (Rime.RimeSetInput(_session, _input))
+        //    {
+        //        RimeDisplay();
+        //    }
+        //}
+        //else
+        //{
+        //    var box = TextBox;
+        //    if (box != null)
+        //    {
+        //        DeleteText(box);
+        //    }
+        //}
+        if (Rime.SimulateKeySequence(_session, "{BackSpace}"))
         {
-            _input = _input[..^1];
-            if (Rime.RimeSetInput(_session, _input))
-            {
-                RimeDisplay();
-            }
+            RimeDisplay();
         }
-        else
-        {
-            var box = TextBox;
-            if (box != null)
-            {
-                DeleteText(box);
-            }
-        }
+
     }
 
     private void RimeTab()
@@ -513,7 +523,7 @@ public partial class KeyboardControl : TemplatedControl
         {
             _select = 0;
         }
-        if (Rime.RimeHighlightCandidateOnCurrentPage(_session, (ulong)_select))
+        if (Rime.HighlightCandidateOnCurrentPage(_session, (ulong)_select))
         {
             RimeDisplay();
         }
@@ -526,7 +536,7 @@ public partial class KeyboardControl : TemplatedControl
             return;
         }
 
-        if (Rime.RimeChangePage(_session, true))
+        if (Rime.ChangePage(_session, true))
         {
             RimeDisplay();
         }
@@ -539,7 +549,7 @@ public partial class KeyboardControl : TemplatedControl
             return;
         }
 
-        if (Rime.RimeChangePage(_session, false))
+        if (Rime.ChangePage(_session, false))
         {
             RimeDisplay();
         }
@@ -547,7 +557,7 @@ public partial class KeyboardControl : TemplatedControl
 
     private void RimeDisplay()
     {
-        if (Rime.RimeGetCommit(_session, out var commit))
+        if (Rime.GetCommit(_session, out var res) && res is { } commit)
         {
             var box = TextBox;
             if (box != null)
@@ -556,7 +566,7 @@ public partial class KeyboardControl : TemplatedControl
                 _input = "";
             }
         }
-        if (Rime.RimeGetContext(_session, out var context))
+        if (Rime.RimeGetContext(_session, out var res1) && res1 is { } context)
         {
             if (context.composition.length > 0 || context.menu.num_candidates > 0)
             {
@@ -578,57 +588,42 @@ public partial class KeyboardControl : TemplatedControl
 
     private void Tick()
     {
-        while (_isRun)
+        if (_isRun == false)
         {
-            Thread.Sleep(100);
-            if (_isRun == false)
+            return;
+        }
+        var box = TextBox;
+        if (box == null || _keyDownSave == Key.None)
+        {
+            _count = 0;
+            return;
+        }
+        if (_count > LoopCount)
+        {
+            if (_keyDownSave == Key.Tab)
             {
-                return;
+                PressTab();
             }
-            try
+            else if (_keyDownSave == Key.Back)
             {
-
-                Dispatcher.UIThread?.Invoke(() =>
-                {
-                    var box = TextBox;
-                    if (box == null || _keyDownSave == Key.None)
-                    {
-                        _count = 0;
-                        return;
-                    }
-                    if (_count > LoopCount)
-                    {
-                        if (_keyDownSave == Key.Tab)
-                        {
-                            PressTab();
-                        }
-                        else if (_keyDownSave == Key.Back)
-                        {
-                            PressBack();
-                        }
-                        else if (_keyDownSave == Key.OemComma)
-                        {
-                            PressOemComma();
-                        }
-                        else if (_keyDownSave == Key.OemPeriod)
-                        {
-                            PressOemPeriod();
-                        }
-                        else
-                        {
-                            PressKey(_keyDownSave);
-                        }
-                    }
-                    else
-                    {
-                        _count++;
-                    }
-                });
+                PressBack();
             }
-            catch
+            else if (_keyDownSave == Key.OemComma)
             {
-
+                PressOemComma();
             }
+            else if (_keyDownSave == Key.OemPeriod)
+            {
+                PressOemPeriod();
+            }
+            else
+            {
+                PressKey(_keyDownSave);
+            }
+        }
+        else
+        {
+            _count++;
         }
     }
 
