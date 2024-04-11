@@ -31,17 +31,17 @@ xmlns:view="clr-namespace:AvaloniaKeyboard.Views;assembly=AvaloniaKeyboard"
 **Keyboard must set a TextBox**
 TextBox can set from code or xaml
 
-## With [Rime](https://github.com/Coloryr/librime)
+## With [Rime](https://github.com/rime/librime)
 
 1. Download rime
-In [Action](https://github.com/Coloryr/librime/action)
+In [Action](https://github.com/rime/librime/action)
 download zip and unzip it.
 copy `rime.dll` to your `Run Path`
 
 2. Download data
 make a dir `data`
 
-download all data from [librime](https://github.com/Coloryr/librime/tree/master/data/minimal)
+download all data from [librime](https://github.com/rime/librime/tree/master/data/minimal)
 
 ```
 - net8.0 \
@@ -51,6 +51,8 @@ download all data from [librime](https://github.com/Coloryr/librime/tree/master/
      - default.yaml
      - ...
   - rime.dll
+  - RimeSharp.dll
+  - AvaloniaKeyboard.dll
   - {your program.exe}
   - ...
 ```
