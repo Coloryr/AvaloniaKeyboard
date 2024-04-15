@@ -56,6 +56,7 @@ public partial class KeyboardControl : TemplatedControl
     public bool IsShift
     {
         get { return GetValue(IsShiftProperty); }
+        set { SetValue(IsShiftProperty, value); }
     }
     public bool IsCtrl
     {
