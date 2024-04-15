@@ -487,33 +487,33 @@ public partial class KeyboardControl : TemplatedControl
         var res = Rime.SimulateKeySequence(_session, key);
         if (res)
         {
-            RimeDisplay();
+            RimeDisplay(key);
         }
     }
 
     private void RimeDelete()
     {
-        //if (_input.Length > 0)
-        //{
-        //    _input = _input[..^1];
-        //    if (Rime.RimeSetInput(_session, _input))
-        //    {
-        //        RimeDisplay();
-        //    }
-        //}
-        //else
-        //{
-        //    var box = TextBox;
-        //    if (box != null)
-        //    {
-        //        DeleteText(box);
-        //    }
-        //}
-        if (Rime.SimulateKeySequence(_session, "{BackSpace}"))
+        if (_input.Length > 0)
         {
-            RimeDisplay();
+            _input = _input[..^1];
+            if (Rime.SetInput(_session, _input))
+            {
+                RimeDisplay();
+            }
+        }
+        else
+        {
+            var box = TextBox;
+            if (box != null)
+            {
+                DeleteText(box);
+            }
         }
 
+        //if (Rime.SimulateKeySequence(_session, "{BackSpace}"))
+        //{
+        //    RimeDisplay();
+        //}
     }
 
     private void RimeTab()
@@ -555,7 +555,7 @@ public partial class KeyboardControl : TemplatedControl
         }
     }
 
-    private void RimeDisplay()
+    private void RimeDisplay(string key = "")
     {
         if (Rime.GetCommit(_session, out var res) && res is { } commit)
         {
@@ -575,6 +575,10 @@ public partial class KeyboardControl : TemplatedControl
             else
             {
                 Input.Text = "";
+                if (TextBox is { } box)
+                {
+                    InsertText(box, key);
+                }
             }
 
             (InputPage.Text, InputSelect.Text) = PrintMenu(context.menu);
