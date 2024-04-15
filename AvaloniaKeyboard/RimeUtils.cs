@@ -1,10 +1,5 @@
-﻿using RimeSharp;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
+using RimeSharp;
 
 namespace AvaloniaKeyboard;
 
@@ -20,7 +15,7 @@ public static class RimeUtils
 
             return null;
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             IsEnable = false;
             return e;

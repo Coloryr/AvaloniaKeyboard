@@ -20,6 +20,10 @@
         </Style>
     </Style>
 
+    <Style Selector="Border.k2">
+        <Setter Property="Background" Value="{DynamicResource ButtonBackgroundPressed}" />
+    </Style>
+
     <Style Selector="TextBlock.k1">
         <Setter Property="HorizontalAlignment" Value="Center" />
         <Setter Property="VerticalAlignment" Value="Center" />

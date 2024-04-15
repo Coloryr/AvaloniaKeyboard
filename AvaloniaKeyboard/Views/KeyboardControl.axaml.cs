@@ -1,16 +1,14 @@
+using System;
+using System.IO;
+using System.Text;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using Avalonia.Rendering;
 using Avalonia.Threading;
 using RimeSharp;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
 
 namespace AvaloniaKeyboard.Views;
 
@@ -19,13 +17,17 @@ public partial class KeyboardControl : TemplatedControl
     public static readonly StyledProperty<int> KeySizeProperty =
             AvaloniaProperty.Register<KeyboardControl, int>(nameof(KeySize), 50);
     public static readonly StyledProperty<int> LoopCountProperty =
-            AvaloniaProperty.Register<KeyboardControl, int>(nameof(LoopCount), 10);
+            AvaloniaProperty.Register<KeyboardControl, int>(nameof(LoopCount), 25);
 
     public static readonly StyledProperty<bool> IsENInputProperty =
            AvaloniaProperty.Register<KeyboardControl, bool>(nameof(IsENInput), true);
     public static readonly StyledProperty<bool> IsCapsProperty =
            AvaloniaProperty.Register<KeyboardControl, bool>(nameof(IsCaps), false);
     public static readonly StyledProperty<bool> IsShiftProperty =
+           AvaloniaProperty.Register<KeyboardControl, bool>(nameof(IsShift), false);
+    public static readonly StyledProperty<bool> IsCtrlProperty =
+           AvaloniaProperty.Register<KeyboardControl, bool>(nameof(IsShift), false);
+    public static readonly StyledProperty<bool> IsAltProperty =
            AvaloniaProperty.Register<KeyboardControl, bool>(nameof(IsShift), false);
 
     public static readonly StyledProperty<TextBox?> TextBoxProperty =
@@ -54,7 +56,14 @@ public partial class KeyboardControl : TemplatedControl
     public bool IsShift
     {
         get { return GetValue(IsShiftProperty); }
-        set { SetValue(IsShiftProperty, value); }
+    }
+    public bool IsCtrl
+    {
+        get { return GetValue(IsCtrlProperty); }
+    }
+    public bool IsAlt
+    {
+        get { return GetValue(IsAltProperty); }
     }
 
     public TextBox? TextBox
@@ -65,7 +74,7 @@ public partial class KeyboardControl : TemplatedControl
 
     private static readonly string[] LanList = ["中", "en"];
 
-    private bool  _isLeftShift, _isRightShift;
+    private bool _isLeftShift, _isRightShift;
     private bool _isLeftCtrl, _isRightCtrl, _isLeftAlt, _isRightAlt;
     private bool _isRun;
 
@@ -78,8 +87,12 @@ public partial class KeyboardControl : TemplatedControl
     private int _page = 0;
     private int _maxPage = 0;
 
-    public event EventHandler<RoutedEventArgs> Inputed;
-    //public event Action? InputedEvent;
+    public class InputedEventArgs(TextBox? text) : EventArgs
+    {
+        public TextBox? TextBox { get; init; } = text;
+    }
+
+    public event EventHandler<InputedEventArgs>? Inputed;
 
 #pragma warning disable CS8618
     internal StackPanel CHSelect;
@@ -254,7 +267,7 @@ public partial class KeyboardControl : TemplatedControl
         {
             Tick();
             return _isRun;
-        }, TimeSpan.FromMilliseconds(100));
+        }, TimeSpan.FromMilliseconds(20));
     }
 
     private void UIThread_ShutdownStarted(object? sender, EventArgs e)
@@ -420,32 +433,32 @@ public partial class KeyboardControl : TemplatedControl
         int end = composition.sel_end;
         int cursor = composition.cursor_pos;
         var temp = Encoding.UTF8.GetBytes(preedit);
-        var list = new List<byte>();
-        var list1 = new List<byte>();
+        using var list = new MemoryStream();
+        using var list1 = new MemoryStream();
         for (int i = 0; i <= len; ++i)
         {
             if (start < end)
             {
                 if (i == start)
                 {
-                    list.Add((byte)'[');
+                    list.WriteByte((byte)'[');
                 }
                 else if (i == end)
                 {
-                    list.Add((byte)']');
+                    list.WriteByte((byte)']');
                 }
             }
             if (i == cursor)
             {
-                list.Add((byte)'|');
+                list.WriteByte((byte)'|');
             }
             if (i < len)
             {
                 if (i >= start && temp[i] != (byte)' ')
                 {
-                    list1.Add(temp[i]);
+                    list1.WriteByte(temp[i]);
                 }
-                list.Add(temp[i]);
+                list.WriteByte(temp[i]);
             }
         }
 
@@ -467,7 +480,7 @@ public partial class KeyboardControl : TemplatedControl
         {
             bool highlighted = i == menu.highlighted_candidate_index;
             builder.Append($"{i + 1}. {(highlighted ? '[' : ' ')}{menu.candidates[i].text}" +
-                $"{(highlighted ? ']' : ' ')}{(menu.candidates[i].comment ?? "")}");
+                $"{(highlighted ? ']' : ' ')}{menu.candidates[i].comment ?? ""}");
         }
 
         return (page, builder.ToString());
@@ -495,8 +508,7 @@ public partial class KeyboardControl : TemplatedControl
     {
         if (_input.Length > 0)
         {
-            _input = _input[..^1];
-            if (Rime.SetInput(_session, _input))
+            if (Rime.SimulateKeySequence(_session, "{BackSpace}"))
             {
                 RimeDisplay();
             }
@@ -509,11 +521,6 @@ public partial class KeyboardControl : TemplatedControl
                 DeleteText(box);
             }
         }
-
-        //if (Rime.SimulateKeySequence(_session, "{BackSpace}"))
-        //{
-        //    RimeDisplay();
-        //}
     }
 
     private void RimeTab()
@@ -713,7 +720,7 @@ public partial class KeyboardControl : TemplatedControl
         else
         {
             DeleteTextBeforeCursor(textBox);
-        }    
+        }
     }
 
     private void LanSwitch_Click(object? sender, RoutedEventArgs e)
@@ -811,30 +818,34 @@ public partial class KeyboardControl : TemplatedControl
         switch (key)
         {
             case Key.Escape:
-                Inputed?.Invoke(this,new RoutedEventArgs());
+                Inputed?.Invoke(this, new(TextBox));
                 return;
             case Key.CapsLock:
                 IsCaps = !IsCaps;
                 return;
             case Key.LeftCtrl:
                 _isLeftCtrl = true;
+                SetValue(IsCtrlProperty, _isLeftCtrl || _isRightCtrl);
                 return;
             case Key.RightCtrl:
                 _isRightCtrl = true;
+                SetValue(IsCtrlProperty, _isLeftCtrl || _isRightCtrl);
                 return;
             case Key.LeftAlt:
                 _isLeftAlt = true;
+                SetValue(IsAltProperty, _isLeftAlt || _isRightAlt);
                 return;
             case Key.RightAlt:
                 _isRightAlt = true;
+                SetValue(IsAltProperty, _isLeftAlt || _isRightAlt);
                 return;
             case Key.LeftShift:
                 _isLeftShift = true;
-                IsShift = _isLeftShift || _isRightShift;
+                SetValue(IsCtrlProperty, _isLeftShift || _isRightShift);
                 return;
             case Key.RightShift:
                 _isRightShift = true;
-                IsShift = _isLeftShift || _isRightShift;
+                SetValue(IsCtrlProperty, _isLeftShift || _isRightShift);
                 return;
             case Key.Back:
                 _count = 0;
@@ -875,23 +886,27 @@ public partial class KeyboardControl : TemplatedControl
         {
             case Key.LeftCtrl:
                 _isLeftCtrl = false;
+                SetValue(IsCtrlProperty, _isLeftCtrl || _isRightCtrl);
                 return;
             case Key.RightCtrl:
                 _isRightCtrl = false;
+                SetValue(IsCtrlProperty, _isLeftCtrl || _isRightCtrl);
                 return;
             case Key.LeftAlt:
                 _isLeftAlt = false;
+                SetValue(IsAltProperty, _isLeftAlt || _isRightAlt);
                 return;
             case Key.RightAlt:
                 _isRightAlt = false;
+                SetValue(IsAltProperty, _isLeftAlt || _isRightAlt);
                 return;
             case Key.LeftShift:
                 _isLeftShift = false;
-                IsShift = _isLeftShift || _isRightShift;
+                SetValue(IsCtrlProperty, _isLeftShift || _isRightShift);
                 return;
             case Key.RightShift:
                 _isLeftShift = false;
-                IsShift = _isLeftShift || _isRightShift;
+                SetValue(IsCtrlProperty, _isLeftShift || _isRightShift);
                 return;
             default:
                 _count = 0;
