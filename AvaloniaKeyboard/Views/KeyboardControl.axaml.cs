@@ -584,6 +584,7 @@ public partial class KeyboardControl : TemplatedControl
             }
             else
             {
+                _input = "";
                 Input.Text = "";
                 if (!comm && TextBox is { } box)
                 {
@@ -595,6 +596,7 @@ public partial class KeyboardControl : TemplatedControl
         }
         else
         {
+            _input = "";
             Input.Text = "";
             InputSelect.Text = "none";
         }
