@@ -557,11 +557,13 @@ public partial class KeyboardControl : TemplatedControl
 
     private void RimeDisplay(string key = "")
     {
+        bool comm = false;
         if (Rime.GetCommit(_session, out var res) && res is { } commit)
         {
             var box = TextBox;
             if (box != null)
             {
+                comm = true;
                 InsertText(box, commit.text);
                 _input = "";
             }
@@ -575,7 +577,7 @@ public partial class KeyboardControl : TemplatedControl
             else
             {
                 Input.Text = "";
-                if (TextBox is { } box)
+                if (!comm && TextBox is { } box)
                 {
                     InsertText(box, key);
                 }
@@ -642,21 +644,16 @@ public partial class KeyboardControl : TemplatedControl
         }
         else
         {
-            // 获取当前选中的文本长度
             int selectionLength = textBox.SelectionEnd - textBox.SelectionStart;
-
-            // 移除选中的文本（如果有）
             if (selectionLength > 0)
             {
                 textBox.Text = textBox.Text.Remove(insertionIndex, selectionLength);
             }
 
-            // 在当前光标位置插入文本
             textBox.Text = textBox.Text.Insert(insertionIndex, text);
         }
 
-        // 更新光标位置
-        textBox.SelectionEnd = textBox.SelectionStart = insertionIndex + text.Length;
+        textBox.SelectionStart = textBox.SelectionEnd = insertionIndex + text.Length;
     }
 
     /// <summary>
