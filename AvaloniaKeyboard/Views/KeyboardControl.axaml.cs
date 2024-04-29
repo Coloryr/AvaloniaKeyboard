@@ -56,7 +56,6 @@ public partial class KeyboardControl : TemplatedControl
     public bool IsShift
     {
         get { return GetValue(IsShiftProperty); }
-        set { SetValue(IsShiftProperty, value); }
     }
     public bool IsCtrl
     {
@@ -844,11 +843,11 @@ public partial class KeyboardControl : TemplatedControl
                 return;
             case Key.LeftShift:
                 _isLeftShift = true;
-                SetValue(IsCtrlProperty, _isLeftShift || _isRightShift);
+                SetValue(IsShiftProperty, _isLeftShift || _isRightShift);
                 return;
             case Key.RightShift:
                 _isRightShift = true;
-                SetValue(IsCtrlProperty, _isLeftShift || _isRightShift);
+                SetValue(IsShiftProperty, _isLeftShift || _isRightShift);
                 return;
             case Key.Back:
                 _count = 0;
@@ -905,11 +904,11 @@ public partial class KeyboardControl : TemplatedControl
                 return;
             case Key.LeftShift:
                 _isLeftShift = false;
-                SetValue(IsCtrlProperty, _isLeftShift || _isRightShift);
+                SetValue(IsShiftProperty, _isLeftShift || _isRightShift);
                 return;
             case Key.RightShift:
                 _isLeftShift = false;
-                SetValue(IsCtrlProperty, _isLeftShift || _isRightShift);
+                SetValue(IsShiftProperty, _isLeftShift || _isRightShift);
                 return;
             default:
                 _count = 0;
