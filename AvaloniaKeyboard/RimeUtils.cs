@@ -6,11 +6,11 @@ namespace AvaloniaKeyboard;
 public static class RimeUtils
 {
     public static bool IsEnable { get; private set; }
-    public static Exception? Init()
+    public static Exception? Init(string? dir = null)
     {
         try
         {
-            Rime.Init(AppContext.BaseDirectory, Handel);
+            Rime.Init(dir ?? AppContext.BaseDirectory, Handel);
             IsEnable = true;
 
             return null;
