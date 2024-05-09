@@ -33,7 +33,10 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <StackPanel>
-                    <StackPanel Name="CHSelect" Orientation="Horizontal">
+                    <StackPanel
+                        Name="CHSelect"
+                        HorizontalAlignment="Stretch"
+                        Orientation="Horizontal">
                         <Button
                             Name="LanSwitch"
                             Width="{TemplateBinding KeySize}"
@@ -53,9 +56,10 @@
                                     Width="50"
                                     Margin="10,0,0,0"
                                     VerticalAlignment="Center" />
-                                <TextBlock
+                                <WrapPanel
                                     Name="InputSelect"
                                     Margin="10,0,0,0"
+                                    HorizontalAlignment="Stretch"
                                     VerticalAlignment="Center" />
                             </StackPanel>
                         </StackPanel>

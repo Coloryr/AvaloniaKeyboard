@@ -99,7 +99,7 @@ public partial class KeyboardControl : TemplatedControl
     internal Button LanSwitch;
     internal TextBlock Input;
     internal TextBlock InputPage;
-    internal TextBlock InputSelect;
+    internal WrapPanel InputSelect;
     internal Border Oem3;
     internal Border NumPad1;
     internal Border NumPad2;
@@ -167,7 +167,7 @@ public partial class KeyboardControl : TemplatedControl
         LanSwitch = e.NameScope.Find<Button>("LanSwitch");
         Input = e.NameScope.Find<TextBlock>("Input");
         InputPage = e.NameScope.Find<TextBlock>("InputPage");
-        InputSelect = e.NameScope.Find<TextBlock>("InputSelect");
+        InputSelect = e.NameScope.Find<WrapPanel>("InputSelect");
         Oem3 = e.NameScope.Find<Border>("Oem3");
         NumPad1 = e.NameScope.Find<Border>("NumPad1");
         NumPad2 = e.NameScope.Find<Border>("NumPad2");
@@ -466,10 +466,13 @@ public partial class KeyboardControl : TemplatedControl
         return Encoding.UTF8.GetString(list.ToArray());
     }
 
-    private (string, string) PrintMenu(RimeMenu menu)
+    private string PrintMenu(RimeMenu menu)
     {
+        InputSelect.Children.Clear();
         if (menu.num_candidates == 0)
-            return ("", "");
+        {
+            return "";
+        }
         var page = $"{menu.page_no + 1} / {menu.page_size}  ";
         _select = menu.highlighted_candidate_index;
         _page = menu.page_no;
@@ -479,11 +482,24 @@ public partial class KeyboardControl : TemplatedControl
         for (int i = 0; i < menu.num_candidates; ++i)
         {
             bool highlighted = i == menu.highlighted_candidate_index;
-            builder.Append($"{i + 1}. {(highlighted ? '[' : ' ')}{menu.candidates[i].text}" +
-                $"{(highlighted ? ']' : ' ')}{menu.candidates[i].comment ?? ""}");
+            var label = new Label()
+            {
+                Content = $"{i + 1}. {(highlighted ? '[' : ' ')}{menu.candidates[i].text}" +
+                $"{(highlighted ? ']' : ' ')}{menu.candidates[i].comment ?? ""}",
+                Background = Brush.Parse("#FAFAFA"),
+                BorderBrush = Brush.Parse("#EFEFEF"),
+                BorderThickness = new Thickness(1),
+                Margin = new Thickness(2, 0, 2, 0)
+            };
+            label.PointerPressed += (a, b) =>
+            {
+                string temp = ((a as Label)!.Content as string)!;
+                RimeInput($"{temp[..1]}");
+            };
+            InputSelect.Children.Add(label);
         }
 
-        return (page, builder.ToString());
+        return page;
     }
 
     private void RimeClear()
@@ -591,13 +607,13 @@ public partial class KeyboardControl : TemplatedControl
                 }
             }
 
-            (InputPage.Text, InputSelect.Text) = PrintMenu(context.menu);
+            InputPage.Text = PrintMenu(context.menu);
         }
         else
         {
             _input = "";
             Input.Text = "";
-            InputSelect.Text = "none";
+            InputSelect.Children.Clear();
         }
     }
 
